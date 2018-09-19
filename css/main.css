@@ -1,0 +1,53 @@
+
+/*-----------------
+    Default
+-------------------*/
+.form-control:focus{
+    outline: none;
+    box-shadow: none;
+}
+.form-control.is-warned{
+
+}
+.form-control.is-warned:focus{
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(226, 185, 17, 0.25);
+}
+/*-----------------
+    Main Section
+-------------------*/
+.main-section{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+.top-tagers-tbl{
+    max-width: 468px;
+    width: 100%;
+}
+
+.top-tagers-tbl .table{
+    text-align: center;
+    font-size: 12px;
+}
+
+.top-tagers-tbl .table th,
+.top-tagers-tbl .table td{
+    padding: .35rem;
+}
+
+#countTags,
+#countDownValue{
+    display: inline-block;
+    margin: 0 3px;
+}
+
+form .form-text span{
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
