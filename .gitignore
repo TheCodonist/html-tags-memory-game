@@ -45,3 +45,5 @@ Thumbs.db
 *.iml
 yarn-error.log
 yarn.lock
+
+/includes/connect.php
