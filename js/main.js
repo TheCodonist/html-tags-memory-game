@@ -1,129 +1,119 @@
-var tags = "!--.!DOCTYPE.a.abbr.acronym.address.applet.area.article.aside.audio.b.base.basefont.bdi.bdo.big.blockquote.body.br.button.canvas.caption.center.cite.code.col.colgroup.data.datalist.dd.del.details.dfn.dialog.dir.div.dl.dt.em.embed.fieldset.figcaption.figure.font.footer.form.frame.frameset.h1.h2.h3.h4.h5.h6.head.header.hr.html.i.iframe.img.input.ins.kbd.label.legend.li.link.main.map.mark.meta.meter.nav.noframes.noscript.object.ol.optgroup.option.output.p.param.picture.pre.progress.q.rp.rt.ruby.s.samp.script.section.select.small.source.span.strike.strong.style.sub.summary.sup.svg.table.tbody.td.template.textarea.tfoot.th.thead.time.title.tr.track.tt.u.ul.var.video.wbr";
-var insertedTags = [];
-var countTags = 0;
-
-function getData() {
-    var template = "";
-    $.ajax({
-        url : './includes/db.php',
-        type : 'POST',
-        data : {
-            action : 'get'
-        },
-        dataType: 'JSON',
-        success : function (res) {
-            res.forEach(function (item,i) {
-                template += '<tr><td>' + item['name'] + '</td><td>' + (i+1) + '</td><td>' + item['no_of_tags'] + '</td></tr>';
-            });
-
-            $('#resultBoard tbody').html(template);
-        },
-        error : function (res) {
-            console.log(res);
-        }
-    });
-}
-
-function insertData(name,tags) {
-    $.ajax({
-        url : './includes/db.php',
-        type : 'POST',
-        data : {
-            action : 'insert',
-            name : name,
-            no_of_tags : tags
-        },
-        success : function (res) {
-            getData();
-        },
-        error : function (data) {
-            console.log(data);
-        }
-    })
-}
-function reset() {
-    $('input[name="typeTag"]').attr('disabled',false);
-    $('#countTags').text(0);
-    insertedTags.length = 0;
-    countTags = 0;
-}
-function startPlaying() {
-    reset();
-    var totaltime = 60;
-    var secInterval = setInterval(function () {
-        $('#countDownValue').text(--totaltime);
-        if(totaltime == 0){
-            clearInterval(secInterval);
-            $('input[name="typeTag"]').attr('disabled',true);
-            $('#tagForm').hide();
-            $('.play-again').show();
-            insertData($('[name="playerName"]').val().trim(), countTags);
-        }
-    },1000);
-}
-
-function findTag(tag) {
-    tag = tag.replace('.','');
-    var reg = new RegExp('\\.' + tag + '\\.','gi');
-    if(insertedTags.indexOf('.' + tag + '.') >= 0 ){
-        return 'warn';
-    }else{
-        var res = tags.match(reg);
-        if(res){
-            insertedTags.push(res[0]);
-            return 'success';
-        }else{
-            return 'danger';
-        }
-    }
-}
-
-function updateCountTags(){
-    $('#countTags').text(++countTags)
-}
 $(document).ready(function () {
-    getData();
-    $('#nameModal').modal({
-        backdrop : 'static',
-        keyboard: false
-    });
-    $('#nameModal').modal('show');
-    $('#playBtn').on('click',function () {
-        if($('[name="playerName"]').val().trim().length >= 2){
-            $('#nameModal').modal('hide');
-            $('#tagForm').show();
-        }else{
-            $('[name="playerName"]').focus();
-        }
-    });
+    let game = new Vue({
+        el: '#htmlMaster',
+        data: {
+            url: 'http://codonist.com/html-game',
+            heading: 'Top HTML Tagers',
+            tags: "!--.!DOCTYPE.a.abbr.acronym.address.applet.area.article.aside.audio.b.base.basefont.bdi.bdo.big.blockquote.body.br.button.canvas.caption.center.cite.code.col.colgroup.data.datalist.dd.del.details.dfn.dialog.dir.div.dl.dt.em.embed.fieldset.figcaption.figure.font.footer.form.frame.frameset.h1.h2.h3.h4.h5.h6.head.header.hr.html.i.iframe.img.input.ins.kbd.label.legend.li.link.main.map.mark.meta.meter.nav.noframes.noscript.object.ol.optgroup.option.output.p.param.picture.pre.progress.q.rp.rt.ruby.s.samp.script.section.select.small.source.span.strike.strong.style.sub.summary.sup.svg.table.tbody.td.template.textarea.tfoot.th.thead.time.title.tr.track.tt.u.ul.var.video.wbr",
+            rows: null,
+            player : {
+                name : null,
+                insertedTags : [],
+                totalTime: 60
+            },
+            activeTypeClass: '',
+            playAgainActive: false,
+            tagFormActive: false
+        },
+        created: function () {
+            $('.loader').remove();
+        },
+        mounted() {
+            $('#nameModal').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+            $('#nameModal').modal('show');
+            this.getData()
+        },
+        methods : {
+            getData : function () {
+                axios({
+                    url: base_url + '/includes/db.php?action=get',
+                    method: 'GET'
+                }).then(function (response) {
+                    game.rows = response.data;
+                });
+            },
+            insertData : function () {
+                let app = this;
+                axios({
+                    url: base_url + '/includes/db.php',
+                    method: 'POST',
+                    params: {
+                        action: 'insert',
+                        name: app.player.name,
+                        no_of_tags: app.player.insertedTags.length
+                    }
+                }).then(function (response) {
+                    console.log(response);
+                    app.getData();
+                });
+            },
+            play : function () {
+                if ($('[name="playerName"]').val().trim().length >= 2) {
+                    $('#nameModal').modal('hide');
+                    this.tagFormActive = true;
+                } else {
+                    $('[name="playerName"]').focus();
+                }
+            },
+            playAgain : function () {
+                this.playAgainActive = false;
+                $('#nameModal').modal('show');
+            },
+            startPlaying : function () {
+                let app = this;
+                app.reset();
+                let secInterval = setInterval(function () {
+                    --app.player.totalTime;
+                    if (app.player.totalTime === 0) {
+                        clearInterval(secInterval);
+                        $('input[name="typeTag"]').attr('disabled', true);
+                        app.tagFormActive = false;
+                        app.playAgainActive = true;
+                        app.insertData();
+                    }
+                }, 1000);
+            },
+            typeTag : function (e) {
+                let app = this;
+                if (e.keyCode === 13) {
+                    app.findTag($(e.target).val());
+                    setTimeout(function () {
+                        app.activeTypeClass = '';
+                    }, 500);
+                    $(e.target).val('');
+                    e.preventDefault();
+                }
+            },
+            reset : function () {
+                let app = this;
+                $('input[name="typeTag"]').attr('disabled', false);
+                app.player.insertedTags.length = 0;
+            },
+            findTag : function (tag) {
+                let app = this;
+                tag = tag.replace('.', '');
+                let reg = new RegExp('\\.' + tag + '\\.', 'gi');
 
-    $('#playAgainBtn').on('click',function () {
-        $('.play-again').hide();
-        $('#nameModal').modal('show');
-    });
-    $('#nameModal').on('hidden.bs.modal', function (e) {
-        startPlaying();
-        $('input[name="typeTag"]').focus();
-    });
-
-
-    $('input[name="typeTag"]').on('keypress',function (e) {
-        if(e.keyCode == 13){
-            var result = findTag($(this).val());
-            if(result == 'success'){
-                updateCountTags();
-                $(this).addClass('is-valid');
-            }else if(result == "warn"){
-                $(this).addClass('is-warned');
-            }else{
-                $(this).addClass('is-invalid');
+                if (app.player.insertedTags.indexOf('.' + tag + '.') >= 0) {
+                    app.activeTypeClass = 'is-warned';
+                } else {
+                    let res = app.tags.match(reg);
+                    if (res) {
+                        app.player.insertedTags.push(res[0]);
+                        app.activeTypeClass = 'is-valid';
+                    } else {
+                        app.activeTypeClass = 'is-invalid';
+                    }
+                }
             }
-            setTimeout(function () {
-                $('input[name="typeTag"]').removeClass('is-valid is-invalid is-warned');
-            },500);
-
-            $(this).val('');
-            e.preventDefault()
         }
+    });
+
+    $('#nameModal').on('hidden.bs.modal', function (e) {
+        game.startPlaying();
+        $('input[name="typeTag"]').focus();
     });
 });

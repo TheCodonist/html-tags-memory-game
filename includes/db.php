@@ -11,9 +11,9 @@ if(isset($_REQUEST) && $_REQUEST['action'] == 'get'){
     }
 }
 
-if(isset($_POST) && $_POST['action'] == 'insert'){
-    $name = $_POST['name'];
-    $no_of_tags = $_POST['no_of_tags'];
+if(isset($_REQUEST) && $_REQUEST['action'] == 'insert'){
+    $name = $_REQUEST['name'];
+    $no_of_tags = $_REQUEST['no_of_tags'];
     $sql_query = "INSERT INTO `html-tagers` (`name`,`no_of_tags`) VALUES ('" . $name . "'," . $no_of_tags . ")";
     if(mysqli_query($cont,$sql_query)){
         echo "Data Successfully Inserted";
